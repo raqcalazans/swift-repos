@@ -3,7 +3,9 @@ import UIKit
 final class AppCoordinator: Coordinator {
     
     var navigationController: UINavigationController
+    
     private let window: UIWindow
+    private var childCoordinators: [Coordinator] = []
 
     init(window: UIWindow) {
         self.window = window
@@ -20,6 +22,8 @@ final class AppCoordinator: Coordinator {
             navigationController: navigationController,
             apiService: apiService 
         )
+        
+        childCoordinators.append(repositoryCoordinator)
         
         repositoryCoordinator.start()
     }
