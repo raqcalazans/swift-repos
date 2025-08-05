@@ -36,9 +36,27 @@ final class PullRequestListViewModel: PullRequestListViewModelProtocol {
                     Task {
                         do {
                             let prs = try await apiService.fetchPullRequests(owner: repository.owner.login, repoName: repository.name)
-                            stateRelay.accept(PullRequestListState(isLoading: false, pullRequests: prs, error: nil, repositoryName: repository.name))
+                            
+                            let openCount = prs.filter{ $0.state == "open" }.count
+                            let closedCount = prs.count - openCount
+                            
+                            stateRelay.accept(PullRequestListState(
+                                isLoading: false,
+                                pullRequests: prs,
+                                error: nil,
+                                repositoryName: repository.name,
+                                openCount: openCount,
+                                closedCount: closedCount
+                            ))
                         } catch {
-                            stateRelay.accept(PullRequestListState(isLoading: false, pullRequests: [], error: error.localizedDescription, repositoryName: repository.name))
+                            stateRelay.accept(PullRequestListState(
+                                isLoading: false,
+                                pullRequests: [],
+                                error: error.localizedDescription,
+                                repositoryName: repository.name,
+                                openCount: 0,
+                                closedCount: 0
+                            ))
                         }
                     }
                     

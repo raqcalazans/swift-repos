@@ -6,9 +6,10 @@ struct PullRequest: Codable, Identifiable {
     let user: User
     let body: String?
     let htmlUrl: URL
+    let state: String
     
     enum CodingKeys: String, CodingKey {
-        case id, title, user, body
+        case id, title, user, body, state
         case htmlUrl = "html_url"
     }
 }

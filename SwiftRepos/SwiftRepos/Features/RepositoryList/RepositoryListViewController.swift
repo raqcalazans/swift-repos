@@ -12,6 +12,7 @@ final class RepositoryListViewController: UIViewController {
 
     init(viewModel: RepositoryListViewModelProtocol) {
         self.viewModel = viewModel
+        
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -21,6 +22,9 @@ final class RepositoryListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        navigationItem.backButtonTitle = ""
+        
         setupUI()
         bindViewModel()
     }
@@ -33,10 +37,15 @@ final class RepositoryListViewController: UIViewController {
 
     private func setupUI() {
         title = "Repositórios Swift"
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .systemGroupedBackground
+        navigationController?.navigationBar.prefersLargeTitles = true
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "RepoCell")
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .clear
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 150
+        tableView.register(RepositoryCell.self, forCellReuseIdentifier: RepositoryCell.reuseID)
         view.addSubview(tableView)
 
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
@@ -66,11 +75,8 @@ final class RepositoryListViewController: UIViewController {
     private func bindViewModel() {
         viewModel.state
             .map { $0.repositories }
-            .drive(tableView.rx.items(cellIdentifier: "RepoCell", cellType: UITableViewCell.self)) { (row, repository, cell) in
-                var content = cell.defaultContentConfiguration()
-                content.text = repository.name
-                content.secondaryText = repository.description ?? "Sem descrição"
-                cell.contentConfiguration = content
+            .drive(tableView.rx.items(cellIdentifier: RepositoryCell.reuseID, cellType: RepositoryCell.self)) { (row, repository, cell) in
+                cell.configure(with: repository)
             }
             .disposed(by: disposeBag)
             
@@ -78,7 +84,7 @@ final class RepositoryListViewController: UIViewController {
             .map { $0.isLoading }
             .drive(activityIndicator.rx.isAnimating)
             .disposed(by: disposeBag)
-            
+           
         viewModel.state
             .map { $0.error == nil }
             .drive(errorLabel.rx.isHidden)
@@ -92,6 +98,12 @@ final class RepositoryListViewController: UIViewController {
         tableView.rx.modelSelected(Repository.self)
             .map { .repositorySelected($0) }
             .bind(to: viewModel.intent)
+            .disposed(by: disposeBag)
+        
+        tableView.rx.itemSelected
+            .subscribe(onNext: { [weak self] indexPath in
+                self?.tableView.deselectRow(at: indexPath, animated: true)
+            })
             .disposed(by: disposeBag)
     }
 }

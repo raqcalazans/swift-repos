@@ -9,9 +9,13 @@ final class PullRequestListViewController: UIViewController {
     private let tableView = UITableView()
     private let activityIndicator = UIActivityIndicatorView(style: .large)
     private let errorLabel = UILabel()
+    
+    private let headerView = UIView()
+    private let statsLabel = UILabel()
 
     init(viewModel: PullRequestListViewModelProtocol) {
         self.viewModel = viewModel
+        
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -21,20 +25,35 @@ final class PullRequestListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         setupUI()
         bindViewModel()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
         viewModel.intent.accept(.viewDidAppear)
     }
 
     private func setupUI() {
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .systemGroupedBackground
+        navigationController?.navigationBar.prefersLargeTitles = false
+        
+        headerView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 44)
+        statsLabel.frame = CGRect(x: 16, y: 0, width: view.frame.width - 32, height: 44)
+        statsLabel.font = .systemFont(ofSize: 14)
+        statsLabel.textColor = .secondaryLabel
+        statsLabel.textAlignment = .center
+        headerView.addSubview(statsLabel)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "PRCell")
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .clear
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 120
+        tableView.tableHeaderView = headerView
+        tableView.register(PullRequestCell.self, forCellReuseIdentifier: PullRequestCell.reuseID)
         view.addSubview(tableView)
 
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
@@ -63,18 +82,19 @@ final class PullRequestListViewController: UIViewController {
 
     private func bindViewModel() {
         viewModel.state
-            .map { $0.repositoryName }
+            .map { "\($0.repositoryName) PRs" }
             .drive(self.rx.title)
             .disposed(by: disposeBag)
-            
+
+        viewModel.state
+            .map { "\($0.openCount) opened / \($0.closedCount) closed" }
+            .drive(statsLabel.rx.text)
+            .disposed(by: disposeBag)
+
         viewModel.state
             .map { $0.pullRequests }
-            .drive(tableView.rx.items(cellIdentifier: "PRCell", cellType: UITableViewCell.self)) { (row, pullRequest, cell) in
-                var content = cell.defaultContentConfiguration()
-                content.text = pullRequest.title
-                content.secondaryText = "Autor: \(pullRequest.user.login)"
-                cell.contentConfiguration = content
-                cell.accessoryType = .disclosureIndicator
+            .drive(tableView.rx.items(cellIdentifier: PullRequestCell.reuseID, cellType: PullRequestCell.self)) { (row, pullRequest, cell) in
+                cell.configure(with: pullRequest)
             }
             .disposed(by: disposeBag)
             
@@ -96,6 +116,12 @@ final class PullRequestListViewController: UIViewController {
         tableView.rx.modelSelected(PullRequest.self)
             .map { .pullRequestSelected($0) }
             .bind(to: viewModel.intent)
+            .disposed(by: disposeBag)
+        
+        tableView.rx.itemSelected
+            .subscribe(onNext: { [weak self] indexPath in
+                self?.tableView.deselectRow(at: indexPath, animated: true)
+            })
             .disposed(by: disposeBag)
     }
 }
