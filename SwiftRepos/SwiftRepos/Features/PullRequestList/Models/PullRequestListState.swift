@@ -1,4 +1,5 @@
 struct PullRequestListState {
+    
     var isLoading: Bool
     var pullRequests: [PullRequest]
     var error: String?

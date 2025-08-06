@@ -1,4 +1,5 @@
 struct RepositoryListState {
+    
     var isLoadingFirstPage: Bool
     var repositories: [Repository]
     var error: String?
