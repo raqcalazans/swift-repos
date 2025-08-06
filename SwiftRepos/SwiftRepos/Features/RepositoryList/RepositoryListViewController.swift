@@ -1,5 +1,6 @@
 import UIKit
 import RxSwift
+import RxCocoa
 
 final class RepositoryListViewController: UIViewController {
 
@@ -9,6 +10,15 @@ final class RepositoryListViewController: UIViewController {
     private let tableView = UITableView()
     private let activityIndicator = UIActivityIndicatorView(style: .large)
     private let errorLabel = UILabel()
+
+    private let footerView: UIView = {
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44))
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.center = view.center
+        indicator.startAnimating()
+        view.addSubview(indicator)
+        return view
+    }()
 
     init(viewModel: RepositoryListViewModelProtocol) {
         self.viewModel = viewModel
@@ -75,16 +85,29 @@ final class RepositoryListViewController: UIViewController {
     private func bindViewModel() {
         viewModel.state
             .map { $0.repositories }
+            .skip(1)
             .drive(tableView.rx.items(cellIdentifier: RepositoryCell.reuseID, cellType: RepositoryCell.self)) { (row, repository, cell) in
                 cell.configure(with: repository)
             }
             .disposed(by: disposeBag)
             
         viewModel.state
-            .map { $0.isLoading }
+            .map { $0.isLoadingFirstPage }
             .drive(activityIndicator.rx.isAnimating)
             .disposed(by: disposeBag)
-           
+
+        viewModel.state
+            .map { $0.isFetchingNextPage }
+            .distinctUntilChanged()
+            .drive(onNext: { [weak self] isFetching in
+                if isFetching {
+                    self?.tableView.tableFooterView = self?.footerView
+                } else {
+                    self?.tableView.tableFooterView = UIView(frame: .zero)
+                }
+            })
+            .disposed(by: disposeBag)
+            
         viewModel.state
             .map { $0.error == nil }
             .drive(errorLabel.rx.isHidden)
@@ -104,6 +127,27 @@ final class RepositoryListViewController: UIViewController {
             .subscribe(onNext: { [weak self] indexPath in
                 self?.tableView.deselectRow(at: indexPath, animated: true)
             })
+            .disposed(by: disposeBag)
+
+        tableView.rx.contentOffset
+            .throttle(.milliseconds(500), scheduler: MainScheduler.instance)
+            .map { [weak self] offset -> Bool in
+                guard let self = self else { return false }
+                
+                let contentHeight = self.tableView.contentSize.height
+                let visibleHeight = self.tableView.frame.height
+
+                guard contentHeight > visibleHeight else { return false }
+                
+                let y = offset.y + visibleHeight
+                let threshold = contentHeight - 200
+                
+                return y >= threshold
+            }
+            .distinctUntilChanged()
+            .filter { $0 }
+            .map { _ in .reachedEndOfList }
+            .bind(to: viewModel.intent)
             .disposed(by: disposeBag)
     }
 }

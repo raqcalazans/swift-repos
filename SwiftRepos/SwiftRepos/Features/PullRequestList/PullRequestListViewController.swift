@@ -93,7 +93,9 @@ final class PullRequestListViewController: UIViewController {
 
         viewModel.state
             .map { $0.pullRequests }
-            .drive(tableView.rx.items(cellIdentifier: PullRequestCell.reuseID, cellType: PullRequestCell.self)) { (row, pullRequest, cell) in
+            .drive(tableView.rx.items(
+                cellIdentifier: PullRequestCell.reuseID,
+                cellType: PullRequestCell.self)) { (row, pullRequest, cell) in
                 cell.configure(with: pullRequest)
             }
             .disposed(by: disposeBag)
