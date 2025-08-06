@@ -10,16 +10,16 @@ final class PullRequestCell: UITableViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .systemBackground
-        view.layer.cornerRadius = Spacing.small
+        view.layer.cornerRadius = Layout.cornerRadius
         view.layer.borderColor = UIColor.systemGray5.cgColor
-        view.layer.borderWidth = 1
+        view.layer.borderWidth = Layout.borderWidth
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .bold)
+        label.font = Typography.subtitle
         label.textColor = .label
         label.numberOfLines = 0
         return label
@@ -27,7 +27,7 @@ final class PullRequestCell: UITableViewCell {
     
     private let bodyLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
+        label.font = Typography.subheadline
         label.textColor = .secondaryLabel
         label.numberOfLines = 3
         label.lineBreakMode = .byTruncatingTail
@@ -37,21 +37,21 @@ final class PullRequestCell: UITableViewCell {
     private let authorAvatarImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 15
+        imageView.layer.cornerRadius = Layout.Avatar.smallCornerRadius
         imageView.clipsToBounds = true
         return imageView
     }()
     
     private let authorNameLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.font = Typography.subheadline
         label.textColor = .label
         return label
     }()
     
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 12)
+        label.font = Typography.caption
         label.textColor = .secondaryLabel
         label.textAlignment = .right
         return label
@@ -134,18 +134,18 @@ final class PullRequestCell: UITableViewCell {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 6),
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Spacing.small),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Spacing.medium),
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -Spacing.medium),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -Spacing.small),
 
             mainStack.topAnchor.constraint(equalTo: containerView.topAnchor, constant: Spacing.medium),
             mainStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: Spacing.medium),
             mainStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -Spacing.medium),
             mainStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -Spacing.medium),
             
-            authorAvatarImageView.widthAnchor.constraint(equalToConstant: 30),
-            authorAvatarImageView.heightAnchor.constraint(equalToConstant: 30),
+            authorAvatarImageView.widthAnchor.constraint(equalToConstant: Layout.Avatar.small),
+            authorAvatarImageView.heightAnchor.constraint(equalToConstant: Layout.Avatar.small),
         ])
     }
 }

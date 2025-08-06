@@ -10,23 +10,23 @@ final class RepositoryCell: UITableViewCell {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .systemBackground
-        view.layer.cornerRadius = Spacing.small
+        view.layer.cornerRadius = Layout.cornerRadius
         view.layer.borderColor = UIColor.systemGray5.cgColor
-        view.layer.borderWidth = 1
+        view.layer.borderWidth = Layout.borderWidth
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
     private let repoNameLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 20, weight: .bold)
+        label.font = Typography.title
         label.textColor = .label
         return label
     }()
     
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15)
+        label.font = Typography.body
         label.textColor = .secondaryLabel
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
@@ -38,14 +38,14 @@ final class RepositoryCell: UITableViewCell {
     
     private let forkCountLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
+        label.font = Typography.subheadline
         label.textColor = .secondaryLabel
         return label
     }()
     
     private let starCountLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
+        label.font = Typography.subheadline
         label.textColor = .secondaryLabel
         return label
     }()
@@ -53,14 +53,14 @@ final class RepositoryCell: UITableViewCell {
     private let authorAvatarImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 25
+        imageView.layer.cornerRadius = Layout.Avatar.mediumCornerRadius
         imageView.clipsToBounds = true
         return imageView
     }()
     
     private let authorNameLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.font = Typography.caption
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -183,14 +183,14 @@ final class RepositoryCell: UITableViewCell {
             mainHorizontalStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -Spacing.medium),
             mainHorizontalStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -Spacing.medium),
              
-            authorAvatarImageView.widthAnchor.constraint(equalToConstant: 50),
-            authorAvatarImageView.heightAnchor.constraint(equalToConstant: 50),
-            rightVerticalStack.widthAnchor.constraint(equalToConstant: 60),
+            authorAvatarImageView.widthAnchor.constraint(equalToConstant: Layout.Avatar.medium),
+            authorAvatarImageView.heightAnchor.constraint(equalToConstant: Layout.Avatar.medium),
+            rightVerticalStack.widthAnchor.constraint(equalToConstant: Layout.RepositoryCell.authorColumnWidth),
              
-            forksIcon.widthAnchor.constraint(equalToConstant: 16),
-            forksIcon.heightAnchor.constraint(equalToConstant: 16),
-            starIcon.widthAnchor.constraint(equalToConstant: 16),
-            starIcon.heightAnchor.constraint(equalToConstant: 16)
+            forksIcon.widthAnchor.constraint(equalToConstant: Layout.Icon.small),
+            forksIcon.heightAnchor.constraint(equalToConstant: Layout.Icon.small),
+            starIcon.widthAnchor.constraint(equalToConstant: Layout.Icon.small),
+            starIcon.heightAnchor.constraint(equalToConstant: Layout.Icon.small)
         ])
     }
 }
