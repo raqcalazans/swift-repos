@@ -1,6 +1,6 @@
 struct Owner: Codable {
-    let login: String
-    let avatarUrl: String
+    let login: String?
+    let avatarUrl: String?
     
     enum CodingKeys: String, CodingKey {
         case login
