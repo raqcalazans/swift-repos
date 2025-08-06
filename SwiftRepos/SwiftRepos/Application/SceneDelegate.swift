@@ -9,8 +9,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let window = UIWindow(windowScene: windowScene)
+        let apiService = APIService()
 
-        self.appCoordinator = AppCoordinator(window: window)
+        self.appCoordinator = AppCoordinator(window: window, apiService: apiService)
         self.appCoordinator?.start()
         
         self.window = window

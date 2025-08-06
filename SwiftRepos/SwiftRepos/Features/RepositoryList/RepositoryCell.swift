@@ -4,20 +4,69 @@ import Kingfisher
 final class RepositoryCell: UITableViewCell {
 
     static let reuseID = "RepositoryCell"
+    
+    // MARK: - UI Components
+    
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBackground
+        view.layer.cornerRadius = Layout.cornerRadius
+        view.layer.borderColor = UIColor.systemGray5.cgColor
+        view.layer.borderWidth = Layout.borderWidth
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let repoNameLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.title
+        label.textColor = .label
+        return label
+    }()
+    
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.body
+        label.textColor = .secondaryLabel
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        return label
+    }()
+    
+    private let forksIcon = UIImageView(image: SFSymbols.fork.image)
+    private let starIcon = UIImageView(image: SFSymbols.star.image)
+    
+    private let forkCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.subheadline
+        label.textColor = .secondaryLabel
+        return label
+    }()
+    
+    private let starCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.subheadline
+        label.textColor = .secondaryLabel
+        return label
+    }()
 
-    private let containerView = UIView()
+    private let authorAvatarImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.layer.cornerRadius = Layout.Avatar.mediumCornerRadius
+        imageView.clipsToBounds = true
+        return imageView
+    }()
     
-    private let repoNameLabel = UILabel()
-    private let descriptionLabel = UILabel()
-    
-    private let forksIcon = UIImageView(image: UIImage(systemName: "tuningfork"))
-    private let forkCountLabel = UILabel()
-    
-    private let starIcon = UIImageView(image: UIImage(systemName: "star.fill"))
-    private let starCountLabel = UILabel()
-
-    private let authorAvatarImageView = UIImageView()
-    private let authorNameLabel = UILabel()
+    private let authorNameLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.caption
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        return label
+    }()
 
     private let mainHorizontalStack = UIStackView()
     private let leftVerticalStack = UIStackView()
@@ -25,63 +74,69 @@ final class RepositoryCell: UITableViewCell {
     private let statsHorizontalStack = UIStackView()
     private let forksStack = UIStackView()
     private let starsStack = UIStackView()
+
+    // MARK: - Initializers
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        setupCell()
-        setupHierarchy()
-        setupConstraints()
+        setupView()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func setupCell() {
+    // MARK: - Public Configuration
+    
+    public func configure(with repository: Repository) {
+        repoNameLabel.text = repository.name ?? "Nome Indisponível"
+        descriptionLabel.text = repository.description ?? "Sem descrição."
+        starCountLabel.text = "\(repository.stargazersCount ?? 0)"
+        forkCountLabel.text = "\(repository.forksCount ?? 0)"
+        
+        if let owner = repository.owner {
+            authorNameLabel.text = owner.login
+            
+            if let avatarUrlString = owner.avatarUrl,
+               let avatarURL = URL(string: avatarUrlString) {
+                
+                authorAvatarImageView.kf.setImage(
+                    with: avatarURL,
+                    placeholder: SFSymbols.placeholderUser.image
+                )
+            } else {
+                authorAvatarImageView.image = SFSymbols.placeholderUser.image
+            }
+        } else {
+            authorNameLabel.text = "Desconhecido"
+            authorAvatarImageView.image = SFSymbols.placeholderUser.image
+        }
+    }
+    
+    // MARK: - Private Setup
+    
+    private func setupView() {
         selectionStyle = .none
         backgroundColor = .clear
-        
-        containerView.backgroundColor = .systemBackground
-        containerView.layer.cornerRadius = 8
-        containerView.layer.borderColor = UIColor.systemGray5.cgColor
-        containerView.layer.borderWidth = 1
-        containerView.translatesAutoresizingMaskIntoConstraints = false
 
-        repoNameLabel.font = .systemFont(ofSize: 20, weight: .bold)
-        repoNameLabel.textColor = .label
-        
-        descriptionLabel.font = .systemFont(ofSize: 15)
-        descriptionLabel.textColor = .secondaryLabel
-        descriptionLabel.numberOfLines = 0
-        descriptionLabel.lineBreakMode = .byWordWrapping
+        configureStacks()
+        setupHierarchy()
+        setupConstraints()
+    }
+    
+    private func configureStacks() {
+        configureStack(mainHorizontalStack, axis: .horizontal, spacing: Spacing.medium, alignment: .center)
+        configureStack(leftVerticalStack, axis: .vertical, spacing: Spacing.small)
+        configureStack(rightVerticalStack, axis: .vertical, spacing: Spacing.extraSmall, alignment: .center)
+        configureStack(statsHorizontalStack, axis: .horizontal, spacing: Spacing.medium)
+        configureStack(forksStack, axis: .horizontal, spacing: Spacing.extraSmall, alignment: .center)
+        configureStack(starsStack, axis: .horizontal, spacing: Spacing.extraSmall, alignment: .center)
 
-        forksIcon.tintColor = .secondaryLabel
-        forksIcon.contentMode = .scaleAspectFit
-        forkCountLabel.font = .systemFont(ofSize: 14)
-        forkCountLabel.textColor = .secondaryLabel
-        
         starIcon.tintColor = .systemYellow
         starIcon.contentMode = .scaleAspectFit
-        starCountLabel.font = .systemFont(ofSize: 14)
-        starCountLabel.textColor = .secondaryLabel
-
-        authorAvatarImageView.contentMode = .scaleAspectFill
-        authorAvatarImageView.layer.cornerRadius = 25
-        authorAvatarImageView.clipsToBounds = true
-        
-        authorNameLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        authorNameLabel.textColor = .secondaryLabel
-        authorNameLabel.textAlignment = .center
-        authorNameLabel.numberOfLines = 0
-        authorNameLabel.lineBreakMode = .byWordWrapping
-
-        configureStack(mainHorizontalStack, axis: .horizontal, spacing: 16, alignment: .center)
-        configureStack(leftVerticalStack, axis: .vertical, spacing: 8)
-        configureStack(rightVerticalStack, axis: .vertical, spacing: 4, alignment: .center)
-        configureStack(statsHorizontalStack, axis: .horizontal, spacing: 16)
-        configureStack(forksStack, axis: .horizontal, spacing: 4, alignment: .center)
-        configureStack(starsStack, axis: .horizontal, spacing: 4, alignment: .center)
+        forksIcon.tintColor = .secondaryLabel
+        forksIcon.contentMode = .scaleAspectFit
     }
 
     private func configureStack(_ stack: UIStackView, axis: NSLayoutConstraint.Axis, spacing: CGFloat, alignment: UIStackView.Alignment = .fill) {
@@ -89,7 +144,7 @@ final class RepositoryCell: UITableViewCell {
         stack.spacing = spacing
         stack.alignment = alignment
     }
-    
+     
     private func setupHierarchy() {
         contentView.addSubview(containerView)
         containerView.addSubview(mainHorizontalStack)
@@ -98,6 +153,7 @@ final class RepositoryCell: UITableViewCell {
         forksStack.addArrangedSubview(forkCountLabel)
         starsStack.addArrangedSubview(starIcon)
         starsStack.addArrangedSubview(starCountLabel)
+        
         statsHorizontalStack.addArrangedSubview(forksStack)
         statsHorizontalStack.addArrangedSubview(starsStack)
         statsHorizontalStack.addArrangedSubview(UIView())
@@ -112,41 +168,29 @@ final class RepositoryCell: UITableViewCell {
         mainHorizontalStack.addArrangedSubview(leftVerticalStack)
         mainHorizontalStack.addArrangedSubview(rightVerticalStack)
     }
-    
+     
     private func setupConstraints() {
         mainHorizontalStack.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Spacing.small),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Spacing.medium),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -Spacing.medium),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -Spacing.small),
 
-            mainHorizontalStack.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 16),
-            mainHorizontalStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
-            mainHorizontalStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
-            mainHorizontalStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16),
-            
-            authorAvatarImageView.widthAnchor.constraint(equalToConstant: 50),
-            authorAvatarImageView.heightAnchor.constraint(equalToConstant: 50),
-            rightVerticalStack.widthAnchor.constraint(equalToConstant: 60),
-            
-            forksIcon.widthAnchor.constraint(equalToConstant: 16),
-            forksIcon.heightAnchor.constraint(equalToConstant: 16),
-            starIcon.widthAnchor.constraint(equalToConstant: 16),
-            starIcon.heightAnchor.constraint(equalToConstant: 16)
+            mainHorizontalStack.topAnchor.constraint(equalTo: containerView.topAnchor, constant: Spacing.medium),
+            mainHorizontalStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: Spacing.medium),
+            mainHorizontalStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -Spacing.medium),
+            mainHorizontalStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -Spacing.medium),
+             
+            authorAvatarImageView.widthAnchor.constraint(equalToConstant: Layout.Avatar.medium),
+            authorAvatarImageView.heightAnchor.constraint(equalToConstant: Layout.Avatar.medium),
+            rightVerticalStack.widthAnchor.constraint(equalToConstant: Layout.RepositoryCell.authorColumnWidth),
+             
+            forksIcon.widthAnchor.constraint(equalToConstant: Layout.Icon.small),
+            forksIcon.heightAnchor.constraint(equalToConstant: Layout.Icon.small),
+            starIcon.widthAnchor.constraint(equalToConstant: Layout.Icon.small),
+            starIcon.heightAnchor.constraint(equalToConstant: Layout.Icon.small)
         ])
-    }
-
-    public func configure(with repository: Repository) {
-        repoNameLabel.text = repository.name
-        descriptionLabel.text = repository.description ?? ""
-        authorNameLabel.text = repository.owner.login
-        starCountLabel.text = "\(repository.stargazersCount)"
-        forkCountLabel.text = "\(repository.forksCount)"
-        
-        if let avatarURL = URL(string: repository.owner.avatarUrl) {
-            authorAvatarImageView.kf.setImage(with: avatarURL, placeholder: UIImage(systemName: "person.circle.fill"))
-        }
     }
 }

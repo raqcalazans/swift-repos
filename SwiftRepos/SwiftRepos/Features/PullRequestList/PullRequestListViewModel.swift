@@ -27,26 +27,42 @@ final class PullRequestListViewModel: PullRequestListViewModelProtocol {
             .subscribe(onNext: { intent in
                 switch intent {
                 case .viewDidAppear:
-                    guard stateRelay.value.pullRequests.isEmpty else { return }
+                    guard !stateRelay.value.hasFetchedOnce else { return }
                     
                     var currentState = stateRelay.value
                     currentState.isLoading = true
                     stateRelay.accept(currentState)
                     
                     Task {
+                        guard let ownerLogin = repository.owner?.login,
+                              let repoName = repository.name else {
+
+                            stateRelay.accept(PullRequestListState(
+                                isLoading: false,
+                                pullRequests: [],
+                                error: "Informações do repositório inválidas.",
+                                repositoryName: repository.name,
+                                openCount: 0,
+                                closedCount: 0,
+                                hasFetchedOnce: true
+                            ))
+                            return
+                        }
+                        
                         do {
-                            let prs = try await apiService.fetchPullRequests(owner: repository.owner.login, repoName: repository.name)
+                            let prs = try await apiService.fetchPullRequests(owner: ownerLogin, repoName: repoName)
                             
-                            let openCount = prs.filter{ $0.state == "open" }.count
+                            let openCount = prs.filter { $0.state == "open" }.count
                             let closedCount = prs.count - openCount
-                            
+
                             stateRelay.accept(PullRequestListState(
                                 isLoading: false,
                                 pullRequests: prs,
                                 error: nil,
                                 repositoryName: repository.name,
                                 openCount: openCount,
-                                closedCount: closedCount
+                                closedCount: closedCount,
+                                hasFetchedOnce: true
                             ))
                         } catch {
                             stateRelay.accept(PullRequestListState(
@@ -55,13 +71,16 @@ final class PullRequestListViewModel: PullRequestListViewModelProtocol {
                                 error: error.localizedDescription,
                                 repositoryName: repository.name,
                                 openCount: 0,
-                                closedCount: 0
+                                closedCount: 0,
+                                hasFetchedOnce: true
                             ))
                         }
                     }
                     
                 case .pullRequestSelected(let pullRequest):
-                    navigationRelay.accept(.showPullRequestInWebView(url: pullRequest.htmlUrl))
+                    if let url = pullRequest.htmlUrl {
+                        navigationRelay.accept(.showPullRequestInWebView(url: url))
+                    }
                 }
             })
             .disposed(by: disposeBag)

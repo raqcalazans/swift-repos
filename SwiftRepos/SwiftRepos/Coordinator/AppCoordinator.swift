@@ -6,10 +6,12 @@ final class AppCoordinator: Coordinator {
     
     private let window: UIWindow
     private var childCoordinators: [Coordinator] = []
+    private let apiService: APIServiceProtocol
 
-    init(window: UIWindow) {
+    init(window: UIWindow, apiService: APIServiceProtocol) {
         self.window = window
         self.navigationController = UINavigationController()
+        self.apiService = apiService
         
         setupNavigationBarAppearance()
     }
@@ -17,8 +19,6 @@ final class AppCoordinator: Coordinator {
     func start() {
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
-
-        let apiService: APIServiceProtocol = APIService()
 
         let repositoryCoordinator = RepositoryCoordinator(
             navigationController: navigationController,
@@ -36,7 +36,7 @@ final class AppCoordinator: Coordinator {
         appearance.backgroundColor = .systemGroupedBackground
         appearance.shadowColor = .clear
         
-        let backButtonImage = UIImage(systemName: "arrow.backward")
+        let backButtonImage = SFSymbols.backArrow.image
         appearance.setBackIndicatorImage(backButtonImage, transitionMaskImage: backButtonImage)
         
         navigationController.navigationBar.standardAppearance = appearance

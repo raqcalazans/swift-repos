@@ -2,7 +2,6 @@ import Foundation
 
 final class APIService: APIServiceProtocol {
 
-    private let baseURL = "https://api.github.com"
     private let decoder: JSONDecoder
 
     init() {
@@ -11,8 +10,7 @@ final class APIService: APIServiceProtocol {
 
     func fetchRepositories(page: Int) async throws -> [Repository] {
         
-        let urlString = "\(baseURL)/search/repositories?q=language:Swift&sort=stars&page=\(page)"
-        guard let url = URL(string: urlString) else {
+        guard let url = APIEndpoint.searchRepositories(page: page).url else {
             throw APIError.invalidURL
         }
 
@@ -33,8 +31,7 @@ final class APIService: APIServiceProtocol {
 
     func fetchPullRequests(owner: String, repoName: String) async throws -> [PullRequest] {
 
-        let urlString = "\(baseURL)/repos/\(owner)/\(repoName)/pulls"
-        guard let url = URL(string: urlString) else {
+        guard let url = APIEndpoint.pullRequests(owner: owner, repoName: repoName).url else {
             throw APIError.invalidURL
         }
 

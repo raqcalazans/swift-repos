@@ -5,68 +5,127 @@ final class PullRequestCell: UITableViewCell {
 
     static let reuseID = "PullRequestCell"
 
-    private let containerView = UIView()
-    private let titleLabel = UILabel()
-    private let bodyLabel = UILabel()
-    private let authorAvatarImageView = UIImageView()
-    private let authorNameLabel = UILabel()
+    // MARK: - UI Components
     
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBackground
+        view.layer.cornerRadius = Layout.cornerRadius
+        view.layer.borderColor = UIColor.systemGray5.cgColor
+        view.layer.borderWidth = Layout.borderWidth
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.subtitle
+        label.textColor = .label
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private let bodyLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.subheadline
+        label.textColor = .secondaryLabel
+        label.numberOfLines = 3
+        label.lineBreakMode = .byTruncatingTail
+        return label
+    }()
+    
+    private let authorAvatarImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.layer.cornerRadius = Layout.Avatar.smallCornerRadius
+        imageView.clipsToBounds = true
+        return imageView
+    }()
+    
+    private let authorNameLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.subheadline
+        label.textColor = .label
+        return label
+    }()
+    
+    private let dateLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.caption
+        label.textColor = .secondaryLabel
+        label.textAlignment = .right
+        return label
+    }()
+
     private let mainStack = UIStackView()
     private let authorStack = UIStackView()
+    private let authorInfoStack = UIStackView()
 
+    // MARK: - Initializers
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
-        setupCell()
-        setupHierarchy()
-        setupConstraints()
+        setupView()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    // MARK: - Public Configuration
 
-    private func setupCell() {
+    public func configure(with pr: PullRequest) {
+        titleLabel.text = pr.title
+        bodyLabel.text = pr.body ?? "Sem descrição."
+        
+        if let user = pr.user {
+            authorNameLabel.text = user.login
+            if let avatarUrlString = user.avatarUrl, let avatarURL = URL(string: avatarUrlString) {
+                authorAvatarImageView.kf.setImage(with: avatarURL, placeholder: SFSymbols.placeholderUser.image)
+            } else {
+                authorAvatarImageView.image = SFSymbols.placeholderUser.image
+            }
+        } else {
+            authorNameLabel.text = "Desconhecido"
+            authorAvatarImageView.image = SFSymbols.placeholderUser.image
+        }
+        
+        dateLabel.text = pr.createdAt?.toFormattedDate()
+    }
+    
+    // MARK: - Private Setup
+
+    private func setupView() {
         selectionStyle = .none
         backgroundColor = .clear
-
-        containerView.backgroundColor = .systemBackground
-        containerView.layer.cornerRadius = 8
-        containerView.layer.borderColor = UIColor.systemGray5.cgColor
-        containerView.layer.borderWidth = 1
-        containerView.translatesAutoresizingMaskIntoConstraints = false
         
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        titleLabel.textColor = .label
-        titleLabel.numberOfLines = 0
-        
-        bodyLabel.font = .systemFont(ofSize: 14)
-        bodyLabel.textColor = .secondaryLabel
-        bodyLabel.numberOfLines = 3
-        bodyLabel.lineBreakMode = .byTruncatingTail
-
-        authorAvatarImageView.contentMode = .scaleAspectFill
-        authorAvatarImageView.layer.cornerRadius = 15
-        authorAvatarImageView.clipsToBounds = true
-        
-        authorNameLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        authorNameLabel.textColor = .label
-        
+        configureStacks()
+        setupHierarchy()
+        setupConstraints()
+    }
+    
+    private func configureStacks() {
         mainStack.axis = .vertical
-        mainStack.spacing = 8
+        mainStack.spacing = Spacing.small
         mainStack.translatesAutoresizingMaskIntoConstraints = false
         
         authorStack.axis = .horizontal
-        authorStack.spacing = 8
+        authorStack.spacing = Spacing.small
         authorStack.alignment = .center
+        
+        authorInfoStack.axis = .horizontal
+        authorInfoStack.spacing = Spacing.small
     }
     
     private func setupHierarchy() {
         contentView.addSubview(containerView)
         containerView.addSubview(mainStack)
         
+        authorInfoStack.addArrangedSubview(authorNameLabel)
+        authorInfoStack.addArrangedSubview(dateLabel)
+        
         authorStack.addArrangedSubview(authorAvatarImageView)
-        authorStack.addArrangedSubview(authorNameLabel)
+        authorStack.addArrangedSubview(authorInfoStack)
         
         mainStack.addArrangedSubview(titleLabel)
         mainStack.addArrangedSubview(bodyLabel)
@@ -75,28 +134,18 @@ final class PullRequestCell: UITableViewCell {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 6),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Spacing.small),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Spacing.medium),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -Spacing.medium),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -Spacing.small),
 
-            mainStack.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 16),
-            mainStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
-            mainStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
-            mainStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16),
+            mainStack.topAnchor.constraint(equalTo: containerView.topAnchor, constant: Spacing.medium),
+            mainStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: Spacing.medium),
+            mainStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -Spacing.medium),
+            mainStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -Spacing.medium),
             
-            authorAvatarImageView.widthAnchor.constraint(equalToConstant: 30),
-            authorAvatarImageView.heightAnchor.constraint(equalToConstant: 30),
+            authorAvatarImageView.widthAnchor.constraint(equalToConstant: Layout.Avatar.small),
+            authorAvatarImageView.heightAnchor.constraint(equalToConstant: Layout.Avatar.small),
         ])
-    }
-
-    public func configure(with pr: PullRequest) {
-        titleLabel.text = pr.title
-        bodyLabel.text = pr.body ?? "Sem descrição."
-        authorNameLabel.text = pr.user.login
-        
-        if let avatarURL = URL(string: pr.user.avatarUrl) {
-            authorAvatarImageView.kf.setImage(with: avatarURL, placeholder: UIImage(systemName: "person.circle.fill"))
-        }
     }
 }
