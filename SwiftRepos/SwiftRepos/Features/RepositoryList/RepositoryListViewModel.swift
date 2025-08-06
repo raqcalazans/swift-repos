@@ -2,29 +2,13 @@ import RxRelay
 import RxCocoa
 import RxSwift
 
-enum RepositoryListNavigation {
-    case showPullRequests(for: Repository)
-}
-
-enum RepositoryListAction {
-    case fetchFirstPage
-    case fetchNextPage(page: Int)
-}
-
-enum RepositoryListResult {
-    case setLoadingFirstPage(Bool)
-    case fetchFirstPageSuccess(repos: [Repository])
-    case fetchFirstPageFailure(error: Error)
+final class RepositoryListViewModel: ViewModelProtocol {
     
-    case setLoadingNextPage(Bool)
-    case fetchNextPageSuccess(repos: [Repository], page: Int)
-    case fetchNextPageFailure(error: Error)
-}
+    typealias Intent = RepositoryListIntent
+    typealias State = RepositoryListState
 
-final class RepositoryListViewModel: RepositoryListViewModelProtocol {
-
-    let intent = PublishRelay<RepositoryListIntent>()
-    let state: Driver<RepositoryListState>
+    let intent = PublishRelay<Intent>()
+    let state: Driver<State>
     let navigation: Signal<RepositoryListNavigation>
     
     private let disposeBag = DisposeBag()

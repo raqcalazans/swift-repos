@@ -2,12 +2,7 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-final class RepositoryListViewController: UIViewController {
-
-    // MARK: - Properties
-    
-    private let viewModel: RepositoryListViewModelProtocol
-    private let disposeBag = DisposeBag()
+final class RepositoryListViewController: BaseViewController<RepositoryListViewModel> {
 
     // MARK: - UI Components
     
@@ -46,68 +41,26 @@ final class RepositoryListViewController: UIViewController {
         return view
     }()
 
-    // MARK: - Initializers
-    
-    init(viewModel: RepositoryListViewModelProtocol) {
-        self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
     // MARK: - Lifecycle
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupView()
-        bindViewModel()
-    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         viewModel.intent.accept(.viewDidAppear)
     }
 
-    // MARK: - Private Setup
+    // MARK: - Overridden Methods
     
-    private func setupView() {
+    override func setupView() {
+        super.setupView()
+        
         setupProperties()
         setupHierarchy()
         setupConstraints()
     }
     
-    private func setupProperties() {
-        title = "Repositórios Swift"
-        navigationItem.backButtonTitle = ""
-        view.backgroundColor = .systemGroupedBackground
-        navigationController?.navigationBar.prefersLargeTitles = true
-    }
-    
-    private func setupHierarchy() {
-        view.addSubview(tableView)
-        view.addSubview(activityIndicator)
-        view.addSubview(errorLabel)
-    }
-    
-    private func setupConstraints() {
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            
-            errorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.large),
-            errorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.large),
-            errorLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
-    }
-
-    private func bindViewModel() {
+    override func bindViewModel() {
+        super.bindViewModel()
+        
         // MARK: - Outputs (ViewModel -> View)
         
         viewModel.state
@@ -178,5 +131,36 @@ final class RepositoryListViewController: UIViewController {
             .map { _ in .reachedEndOfList }
             .bind(to: viewModel.intent)
             .disposed(by: disposeBag)
+    }
+    
+    // MARK: - Private Setup Helpers
+    
+    private func setupProperties() {
+        title = "Repositórios Swift"
+        navigationItem.backButtonTitle = ""
+        view.backgroundColor = .systemGroupedBackground
+        navigationController?.navigationBar.prefersLargeTitles = true
+    }
+    
+    private func setupHierarchy() {
+        view.addSubview(tableView)
+        view.addSubview(activityIndicator)
+        view.addSubview(errorLabel)
+    }
+    
+    private func setupConstraints() {
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
+            errorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.large),
+            errorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.large),
+            errorLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
     }
 }

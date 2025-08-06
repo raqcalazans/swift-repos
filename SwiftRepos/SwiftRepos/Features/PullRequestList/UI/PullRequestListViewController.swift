@@ -2,12 +2,7 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-final class PullRequestListViewController: UIViewController {
-
-    // MARK: - Properties
-    
-    private let viewModel: PullRequestListViewModelProtocol
-    private let disposeBag = DisposeBag()
+final class PullRequestListViewController: BaseViewController<PullRequestListViewModel> {
 
     // MARK: - UI Components
     
@@ -63,37 +58,82 @@ final class PullRequestListViewController: UIViewController {
         return view
     }()
 
-    // MARK: - Initializers
-    
-    init(viewModel: PullRequestListViewModelProtocol) {
-        self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
     // MARK: - Lifecycle
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupView()
-        bindViewModel()
-    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         viewModel.intent.accept(.viewDidAppear)
     }
 
-    // MARK: - Private Setup
+    // MARK: - Override Methods
     
-    private func setupView() {
+    override func setupView() {
+        super.setupView()
+        
         setupProperties()
         setupHierarchy()
         setupConstraints()
     }
+    
+    override func bindViewModel() {
+        super.bindViewModel()
+        
+        // MARK: - Outputs (ViewModel -> View)
+        
+        viewModel.state
+            .map { "\($0.repositoryName ?? "") PRs" }
+            .drive(self.rx.title)
+            .disposed(by: disposeBag)
+        
+        viewModel.state
+            .map { "\($0.openCount) opened / \($0.closedCount) closed" }
+            .drive(statsLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        viewModel.state
+            .map { $0.pullRequests }
+            .drive(tableView.rx.items(cellIdentifier: PullRequestCell.reuseID, cellType: PullRequestCell.self)) { (row, pullRequest, cell) in
+                cell.configure(with: pullRequest)
+            }
+            .disposed(by: disposeBag)
+        
+        viewModel.state
+            .map { $0.isLoading }
+            .drive(activityIndicator.rx.isAnimating)
+            .disposed(by: disposeBag)
+        
+        viewModel.state
+            .map { $0.error == nil }
+            .drive(errorLabel.rx.isHidden)
+            .disposed(by: disposeBag)
+        
+        viewModel.state
+            .map { $0.error }
+            .drive(errorLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        viewModel.state
+            .map { state in
+                return !(state.hasFetchedOnce && !state.isLoading && state.error == nil && state.pullRequests.isEmpty)
+            }
+            .drive(emptyStateLabel.rx.isHidden)
+            .disposed(by: disposeBag)
+        
+        // MARK: - Inputs (View -> ViewModel)
+        
+        tableView.rx.modelSelected(PullRequest.self)
+            .map { .pullRequestSelected($0) }
+            .bind(to: viewModel.intent)
+            .disposed(by: disposeBag)
+        
+        tableView.rx.itemSelected
+            .subscribe(onNext: { [weak self] indexPath in
+                self?.tableView.deselectRow(at: indexPath, animated: true)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    // MARK: - Private Setup Helpers
     
     private func setupProperties() {
         view.backgroundColor = .systemGroupedBackground
@@ -126,61 +166,5 @@ final class PullRequestListViewController: UIViewController {
             emptyStateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.large),
             emptyStateLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
-    }
-
-    private func bindViewModel() {
-        // MARK: - Outputs (ViewModel -> View)
-        
-        viewModel.state
-            .map { "\($0.repositoryName ?? "") PRs" }
-            .drive(self.rx.title)
-            .disposed(by: disposeBag)
-            
-        viewModel.state
-            .map { "\($0.openCount) opened / \($0.closedCount) closed" }
-            .drive(statsLabel.rx.text)
-            .disposed(by: disposeBag)
-            
-        viewModel.state
-            .map { $0.pullRequests }
-            .drive(tableView.rx.items(cellIdentifier: PullRequestCell.reuseID, cellType: PullRequestCell.self)) { (row, pullRequest, cell) in
-                cell.configure(with: pullRequest)
-            }
-            .disposed(by: disposeBag)
-            
-        viewModel.state
-            .map { $0.isLoading }
-            .drive(activityIndicator.rx.isAnimating)
-            .disposed(by: disposeBag)
-            
-        viewModel.state
-            .map { $0.error == nil }
-            .drive(errorLabel.rx.isHidden)
-            .disposed(by: disposeBag)
-            
-        viewModel.state
-            .map { $0.error }
-            .drive(errorLabel.rx.text)
-            .disposed(by: disposeBag)
-            
-        viewModel.state
-            .map { state in
-                return !(state.hasFetchedOnce && !state.isLoading && state.error == nil && state.pullRequests.isEmpty)
-            }
-            .drive(emptyStateLabel.rx.isHidden)
-            .disposed(by: disposeBag)
-
-        // MARK: - Inputs (View -> ViewModel)
-        
-        tableView.rx.modelSelected(PullRequest.self)
-            .map { .pullRequestSelected($0) }
-            .bind(to: viewModel.intent)
-            .disposed(by: disposeBag)
-            
-        tableView.rx.itemSelected
-            .subscribe(onNext: { [weak self] indexPath in
-                self?.tableView.deselectRow(at: indexPath, animated: true)
-            })
-            .disposed(by: disposeBag)
     }
 }

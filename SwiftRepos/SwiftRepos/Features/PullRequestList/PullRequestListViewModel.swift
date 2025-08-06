@@ -4,14 +4,13 @@ import RxSwift
 import RxCocoa
 import RxRelay
 
-enum PullRequestListNavigation {
-    case showPullRequestInWebView(url: URL)
-}
-
-final class PullRequestListViewModel: PullRequestListViewModelProtocol {
+final class PullRequestListViewModel: ViewModelProtocol {
     
-    let intent = PublishRelay<PullRequestListIntent>()
-    let state: Driver<PullRequestListState>
+    typealias Intent = PullRequestListIntent
+    typealias State = PullRequestListState
+    
+    let intent = PublishRelay<Intent>()
+    let state: Driver<State>
     let navigation: Signal<PullRequestListNavigation>
     
     private let disposeBag = DisposeBag()
