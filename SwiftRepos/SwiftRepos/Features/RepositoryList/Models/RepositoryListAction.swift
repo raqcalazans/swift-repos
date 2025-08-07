@@ -1,5 +1,8 @@
 enum RepositoryListAction {
     
-    case fetchFirstPage
-    case fetchNextPage(page: Int)
+    case viewDidAppear
+    case repositorySelected(Repository)
+    case reachedEndOfList
+    case repositoriesResponse(TaskResult<[Repository]>)
+    case nextPageResponse(TaskResult<[Repository]>)
 }

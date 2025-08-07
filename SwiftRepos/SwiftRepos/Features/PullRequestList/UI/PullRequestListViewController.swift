@@ -2,7 +2,13 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-final class PullRequestListViewController: BaseViewController<PullRequestListViewModel> {
+typealias PullRequestListStore = Store<
+    PullRequestListState,
+    PullRequestListAction,
+    (apiService: APIServiceProtocol, repository: Repository)
+>
+
+final class PullRequestListViewController: BaseViewController<PullRequestListStore> {
 
     // MARK: - UI Components
     
@@ -79,6 +85,7 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
         super.bindViewModel()
         
         // MARK: - Outputs (ViewModel -> View)
+        // MARK: - Outputs (Store -> View)
         
         viewModel.state
             .map { "\($0.repositoryName ?? "") PRs" }
@@ -119,11 +126,11 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
             .drive(emptyStateLabel.rx.isHidden)
             .disposed(by: disposeBag)
         
-        // MARK: - Inputs (View -> ViewModel)
+        // MARK: - Inputs (View -> Store)
         
         tableView.rx.modelSelected(PullRequest.self)
             .map { .pullRequestSelected($0) }
-            .bind(to: viewModel.intent)
+            .bind(to: viewModel.action)
             .disposed(by: disposeBag)
         
         tableView.rx.itemSelected
