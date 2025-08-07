@@ -1,0 +1,61 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "empty_pull_request_list" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Pull Requests found for this repository."
+          }
+        }
+      }
+    },
+    "pull_request_details_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull Request"
+          }
+        }
+      }
+    },
+    "pull_request_list_title_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ PRs"
+          }
+        }
+      }
+    },
+    "repository_list_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Repositories"
+          }
+        }
+      }
+    },
+    "stats_header_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d opened / %d closed"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

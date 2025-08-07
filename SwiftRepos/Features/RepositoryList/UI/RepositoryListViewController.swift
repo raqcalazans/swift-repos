@@ -152,7 +152,7 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
     // MARK: - Private Setup Helpers
     
     private func setupProperties() {
-        title = "Repositórios Swift"
+        title = String.LocalizedKeys.repositoryListTitle
         navigationItem.backButtonTitle = ""
         view.backgroundColor = .systemGroupedBackground
         navigationController?.navigationBar.prefersLargeTitles = true

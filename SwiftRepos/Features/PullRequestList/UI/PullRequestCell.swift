@@ -3,7 +3,7 @@ import Kingfisher
 
 final class PullRequestCell: UITableViewCell {
 
-    static let reuseID = "PullRequestCell"
+    static let reuseID = Identifiers.Cell.pullRequest
 
     // MARK: - UI Components
     

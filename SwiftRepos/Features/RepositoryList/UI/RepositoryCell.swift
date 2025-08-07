@@ -3,7 +3,7 @@ import Kingfisher
 
 final class RepositoryCell: UITableViewCell {
 
-    static let reuseID = "RepositoryCell"
+    static let reuseID = Identifiers.Cell.repository
     
     // MARK: - UI Components
     
