@@ -103,6 +103,17 @@ struct AppConfiguration {
     }
 }
 
+// MARK: - Identifiers
+
+/// Struct that defines reusable identifiers for UI components like table view cells.
+struct Identifiers {
+    enum Cell {
+        /// Reusable identifier for the RepositoryCell ("RepositoryCell").
+        static let repository = "RepositoryCell"
+        /// Reusable identifier for the PullRequestCell ("PullRequestCell").
+        static let pullRequest = "PullRequestCell"
+    }
+}
 
 // MARK: - SF Symbols
 

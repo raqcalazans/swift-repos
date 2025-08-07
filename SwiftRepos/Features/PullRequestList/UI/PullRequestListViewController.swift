@@ -40,7 +40,7 @@ final class PullRequestListViewController: BaseViewController<PullRequestListSto
     
     private let emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Nenhum Pull Request encontrado para este repositório."
+        label.text = String.LocalizedKeys.emptyPullRequestList
         label.font = Typography.body
         label.textColor = .secondaryLabel
         label.textAlignment = .center
@@ -96,12 +96,12 @@ final class PullRequestListViewController: BaseViewController<PullRequestListSto
         // MARK: - Outputs (Store -> View)
         
         viewModel.state
-            .map { "\($0.repositoryName ?? "") PRs" }
+            .map { String.LocalizedKeys.pullRequestListTitle(for: $0.repositoryName ?? "") }
             .drive(self.rx.title)
             .disposed(by: disposeBag)
         
         viewModel.state
-            .map { "\($0.openCount) opened / \($0.closedCount) closed" }
+            .map { String.LocalizedKeys.statsHeader(open: $0.openCount, closed: $0.closedCount) }
             .drive(statsLabel.rx.text)
             .disposed(by: disposeBag)
         
