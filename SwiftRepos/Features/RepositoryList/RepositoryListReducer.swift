@@ -11,6 +11,9 @@ func repositoryListReducer(
     dependency: APIServiceProtocol
 ) -> Effect<RepositoryListAction>? {
     
+    state.error = nil
+    state.paginationError = nil
+    
     switch action {
     case .viewDidAppear:
         guard state.repositories.isEmpty else { return nil }
@@ -68,6 +71,7 @@ func repositoryListReducer(
         
     case .nextPageResponse(.failure(let error)):
         state.isFetchingNextPage = false
+        state.paginationError = error.localizedDescription
         return nil
     }
 }

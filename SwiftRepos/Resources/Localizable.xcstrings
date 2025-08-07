@@ -12,6 +12,50 @@
         }
       }
     },
+    "error_decoding" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to decode the server response."
+          }
+        }
+      }
+    },
+    "error_invalid_url" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The provided URL is invalid."
+          }
+        }
+      }
+    },
+    "error_request_failed_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The request failed: %@"
+          }
+        }
+      }
+    },
+    "error_unexpected_status_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The API returned an unexpected status: %d"
+          }
+        }
+      }
+    },
     "pull_request_details_title" : {
       "extractionState" : "manual",
       "localizations" : {

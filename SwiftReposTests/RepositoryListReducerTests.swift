@@ -89,4 +89,22 @@ final class RepositoryListReducerTests: XCTestCase {
         XCTAssertTrue(state.isFetchingNextPage, "isFetchingNextPage should be true")
         XCTAssertNotNil(effect, "An effect to fetch the next page should be returned")
     }
+    
+    // Tests if, after a pagination failure, the state is updated with a pagination error.
+    func test_nextPageResponse_withFailure_shouldUpdateStateWithPaginationError() {
+        // Given
+        var state = RepositoryListState.initial
+        state.isFetchingNextPage = true
+        let error = MockAPIService.MockError.networkError
+        let action = RepositoryListAction.nextPageResponse(.failure(error))
+        
+        // When
+        let effect = repositoryListReducer(state: &state, action: action, dependency: mockApiService)
+        
+        // Then
+        XCTAssertFalse(state.isFetchingNextPage, "isFetchingNextPage should be false after a failure response")
+        XCTAssertNotNil(state.paginationError, "A paginationError message should be set in the state")
+        XCTAssertNil(state.error, "The main screen error should be nil")
+        XCTAssertNil(effect, "No new effect should be returned after a failure response")
+    }
 }

@@ -51,6 +51,21 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
         view.addSubview(indicator)
         return view
     }()
+    
+    private let paginationErrorToast: UILabel = {
+        let label = UILabel()
+        label.backgroundColor = .systemRed.withAlphaComponent(0.9)
+        label.textColor = .white
+        label.font = Typography.subheadline
+        label.textAlignment = .center
+        label.layer.cornerRadius = Layout.cornerRadius
+        label.clipsToBounds = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.alpha = 0
+        return label
+    }()
+    
+    private var hideToastWorkItem: DispatchWorkItem?
 
     // MARK: - Lifecycle
     
@@ -110,6 +125,27 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
             .map { $0.error }
             .drive(errorLabel.rx.text)
             .disposed(by: disposeBag)
+        
+        viewModel.state
+            .map { $0.paginationError }
+            .distinctUntilChanged()
+            .drive(onNext: { [weak self] errorText in
+                guard let self = self else { return }
+                self.hideToastWorkItem?.cancel()
+                
+                guard let text = errorText else {
+                    self.hidePaginationErrorToast()
+                    return
+                }
+                
+                self.showPaginationErrorToast(message: text)
+                let requestWorkItem = DispatchWorkItem { [weak self] in
+                    self?.hidePaginationErrorToast()
+                }
+                self.hideToastWorkItem = requestWorkItem
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: requestWorkItem)
+            })
+            .disposed(by: disposeBag)
 
         // MARK: - Inputs (View -> Store)
         
@@ -162,6 +198,7 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
         view.addSubview(tableView)
         view.addSubview(activityIndicator)
         view.addSubview(errorLabel)
+        view.addSubview(paginationErrorToast)
     }
     
     private func setupConstraints() {
@@ -176,7 +213,25 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
             
             errorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.large),
             errorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.large),
-            errorLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            errorLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
+            paginationErrorToast.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.medium),
+            paginationErrorToast.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.medium),
+            paginationErrorToast.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -Spacing.medium),
+            paginationErrorToast.heightAnchor.constraint(equalToConstant: Layout.standardViewHeight)
         ])
+    }
+    
+    private func showPaginationErrorToast(message: String) {
+        paginationErrorToast.text = message
+        UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseInOut, animations: {
+            self.paginationErrorToast.alpha = 1
+        })
+    }
+    
+    private func hidePaginationErrorToast() {
+        UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseInOut, animations: {
+            self.paginationErrorToast.alpha = 0
+        })
     }
 }
