@@ -1,4 +1,6 @@
-# SwiftRepos
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2b374a6a-9735-4aab-b39b-5f1a2008675b" width="200" alt="SwiftRepos App Icon">
+</p>
 
 ![Swift Version](https://img.shields.io/badge/Swift-5.5%2B-orange)
 ![Platform](https://img.shields.io/badge/Platform-iOS%2013%2B-lightgrey)
@@ -108,4 +110,4 @@ The application is built upon a modern, scalable, and highly testable architectu
 
 | Repository List | Pull Request List |
 | :---: | :----: |
-|  |  |
+|  <img width="200" alt="Screenshot Repository List screen" src="https://github.com/user-attachments/assets/f0bf5bd0-5202-4b94-97d3-7cfa4108c3a2" /> | <img width="200" alt="Screenshot Pull Request List screen" src="https://github.com/user-attachments/assets/5b186fd8-2e4a-4f21-81bf-ba8fe97ee4cd" /> |
