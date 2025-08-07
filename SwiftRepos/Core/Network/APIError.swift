@@ -9,13 +9,13 @@ enum APIError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "A URL fornecida é inválida."
+            return String.LocalizedKeys.errorInvalidURL
         case .requestFailed(let error):
-            return "A requisição falhou: \(error.localizedDescription)"
-        case .decodingError(let error):
-            return "Erro ao decodificar a resposta: \(error.localizedDescription)"
+            return String.LocalizedKeys.errorRequestFailed(description: error.localizedDescription)
+        case .decodingError:
+            return String.LocalizedKeys.errorDecoding
         case .unexpectedStatusCode(let statusCode):
-            return "A API retornou um status inesperado: \(statusCode)"
+            return String.LocalizedKeys.errorUnexpectedStatus(code: statusCode)
         }
     }
 }

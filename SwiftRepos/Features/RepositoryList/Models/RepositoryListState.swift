@@ -6,6 +6,7 @@ struct RepositoryListState {
     var currentPage: Int
     var isFetchingNextPage: Bool
     var canLoadMorePages: Bool
+    var paginationError: String?
 
     static let initial = RepositoryListState(
         isLoadingFirstPage: false,
@@ -13,6 +14,7 @@ struct RepositoryListState {
         error: nil,
         currentPage: 1,
         isFetchingNextPage: false,
-        canLoadMorePages: true
+        canLoadMorePages: true,
+        paginationError: nil
     )
 }
