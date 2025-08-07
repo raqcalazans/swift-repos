@@ -17,7 +17,7 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 160
+        tableView.estimatedRowHeight = Layout.RepositoryCell.estimatedRowHeight
         tableView.register(RepositoryCell.self, forCellReuseIdentifier: RepositoryCell.reuseID)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
@@ -39,7 +39,12 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
     }()
 
     private let footerView: UIView = {
-        let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44))
+        let view = UIView(frame: CGRect(
+            x: 0,
+            y: 0,
+            width: UIScreen.main.bounds.width,
+            height: Layout.standardViewHeight
+        ))
         let indicator = UIActivityIndicatorView(style: .medium)
         indicator.center = view.center
         indicator.startAnimating()
@@ -120,7 +125,10 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
             .disposed(by: disposeBag)
 
         tableView.rx.contentOffset
-            .throttle(.milliseconds(500), scheduler: MainScheduler.instance)
+            .throttle(
+                .milliseconds(AppConfiguration.Pagination.scrollThrottleInterval),
+                scheduler: MainScheduler.instance
+            )
             .map { [weak self] offset -> Bool in
                 guard let self = self else { return false }
                 
@@ -130,7 +138,7 @@ final class RepositoryListViewController: BaseViewController<RepositoryListStore
                 guard contentHeight > visibleHeight else { return false }
                 
                 let y = offset.y + visibleHeight
-                let threshold = contentHeight - 200
+                let threshold = contentHeight - AppConfiguration.Pagination.threshold
                 
                 return y >= threshold
             }
