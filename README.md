@@ -1,63 +1,111 @@
-# Swift Repos 
+# SwiftRepos
 
-![Swift](https://img.shields.io/badge/Swift-5.0-orange.svg)
-![Platform](https://img.shields.io/badge/platform-iOS-lightgrey.svg)
-![Architecture](https://img.shields.io/badge/Architecture-MVI%2BCoordinator-blue)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Swift Version](https://img.shields.io/badge/Swift-5.5%2B-orange)
+![Platform](https://img.shields.io/badge/Platform-iOS%2013%2B-lightgrey)
+![Architecture](https://img.shields.io/badge/Architecture-TCA--inspired%2BCoordinator-blue)
+[![SwiftRepos CI](https://github.com/raqcalazans/swift-repos/actions/workflows/ci.yml/badge.svg)](https://github.com/raqcalazans/swift-repos/actions/workflows/ci.yml)
 
-Um aplicativo iOS nativo que consome a API do GitHub para listar os repositórios mais populares da linguagem Swift e visualizar seus Pull Requests. Este projeto foi desenvolvido como um desafio técnico, focando em boas práticas de arquitetura de software e desenvolvimento iOS moderno.
-
----
-
-## Funcionalidades
-
--   **Lista de Repositórios**: Exibe uma lista dos repositórios Swift com mais estrelas no GitHub.
--   **Paginação**: A lista de repositórios é paginada para uma experiência de usuário fluida e eficiente.
--   **Lista de Pull Requests**: Ao selecionar um repositório, o app exibe uma lista com todos os seus Pull Requests (abertos e fechados).
--   **Visualização de PR**: Ao tocar em um Pull Request, uma webview é aberta modalmente para exibir a página oficial do PR no GitHub.
+SwiftRepos is a native iOS application developed as a technical challenge. It consumes the GitHub API to display a list of the most popular Swift repositories, allowing users to view their respective pull requests. The project was built with a strong focus on modern software architecture, code quality, testability, and automation.
 
 ---
 
-## Arquitetura
+## Features
 
-Este projeto foi construído utilizando uma arquitetura moderna e escalável, combinando os padrões **MVI (Model-View-Intent)** e **Coordinator**.
-
--   **MVI (Model-View-Intent)**: Garante um fluxo de dados unidirecional e um estado previsível para cada tela.
-    -   **Model/State**: Uma única fonte da verdade que representa todo o estado da UI.
-    -   **View**: Camada passiva que apenas renderiza o estado e encaminha as interações do usuário.
-    -   **Intent**: Representa as intenções do usuário, que são processadas pelo ViewModel.
-    -   **ViewModel**: Orquestra a lógica da feature, processa os `Intents` e emite novos `States`.
-
--   **Coordinator**: Gerencia todo o fluxo de navegação do aplicativo, desacoplando completamente as `Views` da responsabilidade de navegar entre telas.
-
--   **Injeção de Dependência (DI)**: Utilizamos protocolos para injetar dependências (como o `APIService`) nos `ViewModels`, facilitando a testabilidade e a manutenção do código.
-
--   **Programação Reativa**: A comunicação entre as camadas da arquitetura é feita utilizando **RxSwift**, garantindo um código mais declarativo e responsivo.
+-   **Popular Repositories**: Displays a paginated list of the most starred Swift repositories on GitHub.
+-   **Infinite Scroll**: Automatically fetches and appends the next page of results as the user scrolls.
+-   **Pull Request List**: Shows a detailed list of pull requests for a selected repository, including author, title, body, and creation date.
+-   **PR Details**: Opens the official pull request page on GitHub within a webview.
+-   **Robust Error Handling**: Handles API errors gracefully, including a non-intrusive toast notification for pagination failures.
+-   **Empty States**: Provides clear user feedback when a repository has no pull requests.
 
 ---
 
-## Como Executar
+## Architecture
 
-**Pré-requisitos:**
+The application is built upon a modern, scalable, and highly testable architecture inspired by **The Composable Architecture (TCA)**, combined with the **Coordinator** pattern for navigation.
+
+-   **TCA-inspired Unidirectional Data Flow**:
+    -   **Store**: A generic, centralized state manager for each feature. It receives `Actions`, runs them through a `Reducer`, and executes side `Effects`.
+    -   **State**: A simple `struct` that holds the entire state for a given feature, acting as the single source of truth.
+    -   **Action**: An `enum` representing all possible events that can occur, from user interactions to API responses.
+    -   **Reducer**: A pure function `(inout State, Action, Dependency) -> Effect?` that is responsible for all state mutations. Its purity makes business logic extremely easy to test.
+    -   **Effect**: Represents asynchronous side effects (like API calls) that are executed by the `Store` and feed data back into the system by sending new `Actions`.
+
+-   **Coordinator Pattern**:
+    -   Navigation logic is completely decoupled from the `ViewControllers`.
+    -   The `AppCoordinator` manages the main navigation flow, while feature-specific coordinators (like `RepositoryCoordinator`) handle navigation between related screens.
+    -   Coordinators also act as a **Factory**, responsible for creating and injecting all dependencies for a given feature.
+
+-   **Generic `BaseViewController`**:
+    -   A generic base class was implemented to handle common `UIViewController` logic (ViewModel injection, `DisposeBag` management), reducing boilerplate code and ensuring consistency.
+
+---
+
+## Technical Choices & Justifications
+
+-   **Swift Concurrency (`async/await`)**: Chosen for the network layer over traditional completion handlers. This provides significantly improved readability, a unified `try/catch` error handling mechanism, and compile-time safety against common concurrency bugs like forgetting to call a completion handler.
+-   **RxSwift**: Used as the reactive framework to bind the `State` from the `Store` to the UI. Its `Driver` and `Signal` units are perfect for safely updating the UI from the main thread, while its powerful operators simplify the handling of user input (`Inputs`) and data streams (`Outputs`).
+-   **View Code & Design System**: The entire UI was built programmatically to provide maximum control and avoid the overhead of Storyboards. A `DesignSystem.swift` file was created to centralize all UI constants (spacing, colors, typography, layout values), ensuring visual consistency and making future redesigns trivial.
+-   **Resilience (Optional Models)**: All data models that map to the API response have optional properties. This makes the app fault-tolerant and resilient, preventing crashes if the API returns incomplete or null data for any field.
+-   **Localization**: User-facing strings are managed through a **String Catalog** (`.xcstrings`) and accessed via a type-safe extension, eliminating "magic strings" and preparing the app for future translation.
+
+---
+
+## Libraries Used
+
+| Library | Purpose |
+| :--- | :--- |
+| **RxSwift/RxCocoa** | Reactive programming framework for binding UI and managing data streams. |
+| **Kingfisher** | Efficient asynchronous image downloading and caching. |
+| **Fastlane** | Automation tool for running tests from the command line. |
+
+---
+
+## Getting Started
+
+**Prerequisites:**
 * macOS
-* Xcode 16 ou superior
-* Swift 5
+* Xcode 16+ (Swift 5.5+)
+* Ruby and Bundler (for Fastlane)
 
-**Passos:**
+**Instructions:**
 
-1.  Clone o repositório:
+1.  Clone the repository:
     ```bash
-    git clone [https://github.com/raqcalazans/swift-repos.git](https://github.com/raqcalazans/swift-repos.git)
+    git clone https://github.com/raqcalazans/swift-repos.git
     ```
-2.  Abra o arquivo `SwiftRepos.xcodeproj` no Xcode.
-3.  O Xcode irá resolver as dependências (RxSwift) automaticamente via Swift Package Manager.
-4.  Compile e execute o projeto em um simulador ou dispositivo físico (`Cmd + R`).
+2.  Navigate to the project's root directory:
+    ```bash
+    cd swift-repos
+    ```
+3.  Install Ruby dependencies:
+    ```bash
+    bundle install
+    ```
+4.  Open `SwiftRepos.xcodeproj` in Xcode. The Swift Package Manager will automatically resolve the project dependencies (RxSwift, Kingfisher).
+5.  Build and run the project (`Cmd + R`).
+
+---
+
+## Testing & CI
+
+-   **Unit Tests**: The project includes a suite of unit tests for the `Reducer` functions. Thanks to the TCA-inspired architecture, the core business logic is tested synchronously and without needing to mock complex asynchronous dependencies.
+-   **Continuous Integration (CI)**: A CI pipeline is configured using **Fastlane** and **GitHub Actions**. The workflow, defined in `.github/workflows/ci.yml`, automatically runs all unit tests for every pull request targeting the `main` branch, ensuring code quality and stability.
+
+---
+
+## Future Improvements
+
+-   **Integration & UI Tests**: Expand the test suite to include integration tests for the `APIService` against the real GitHub API and UI tests to validate user flows.
+-   **Full Localization**: Add translations for other languages (e.g., Portuguese, Spanish) to the `Localizable.xcstrings` catalog.
+-   **Enhanced Error Messages**: Implement more user-friendly error views with custom messages for different error types (e.g., "No internet connection" vs. "Server error").
+-   **UI Enhancements**: Explore more advanced UI effects, such as the "Liquid Glass" (glassmorphism) style for the cells.
+-   **App Icon Variants**: Create Dark Mode and Tinted versions of the App Icon to better integrate with the system's appearance.
 
 ---
 
 ## Screenshots
 
-| Lista de Repositórios                               | Lista de Pull Requests                               |
-| --------------------------------------------------- | ---------------------------------------------------- |
-| ![Imagem da Lista de Repositórios] | ![Imagem da Lista de Pull Requests] |
-
+| Repository List | Pull Request List |
+| :---: | :----: |
+|  |  |
