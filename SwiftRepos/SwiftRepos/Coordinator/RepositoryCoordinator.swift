@@ -18,15 +18,23 @@ final class RepositoryCoordinator: Coordinator {
     }
 
     private func showRepositoryList() {
-        let viewModel = RepositoryListViewModel(apiService: apiService)
-        let viewController = RepositoryListViewController(viewModel: viewModel)
-
-        viewModel.navigation
-            .emit(onNext: { [weak self] navigationEvent in
-                switch navigationEvent {
-                case .showPullRequests(let repository):
-                    self?.showPullRequestList(for: repository)
+        let store = Store(
+            initialState: RepositoryListState.initial,
+            reducer: repositoryListReducer,
+            dependency: apiService
+        )
+        
+        let viewController = RepositoryListViewController(viewModel: store)
+        
+        store.action
+            .compactMap { action -> Repository? in
+                if case .repositorySelected(let repo) = action {
+                    return repo
                 }
+                return nil
+            }
+            .subscribe(onNext: { [weak self] repository in
+                self?.showPullRequestList(for: repository)
             })
             .disposed(by: disposeBag)
         
@@ -34,15 +42,23 @@ final class RepositoryCoordinator: Coordinator {
     }
 
     private func showPullRequestList(for repository: Repository) {
-        let viewModel = PullRequestListViewModel(repository: repository, apiService: apiService)
-        let viewController = PullRequestListViewController(viewModel: viewModel)
-
-        viewModel.navigation
-            .emit(onNext: { [weak self] navigationEvent in
-                switch navigationEvent {
-                case .showPullRequestInWebView(let url):
-                    self?.showPullRequestInWebView(url: url)
+        let store = Store(
+            initialState: PullRequestListState.initial(repositoryName: repository.name),
+            reducer: pullRequestListReducer,
+            dependency: (apiService: apiService, repository: repository)
+        )
+        
+        let viewController = PullRequestListViewController(viewModel: store)
+        
+        store.action
+            .compactMap { action -> URL? in
+                if case .pullRequestSelected(let pr) = action {
+                    return pr.htmlUrl
                 }
+                return nil
+            }
+            .subscribe(onNext: { [weak self] url in
+                self?.showPullRequestInWebView(url: url)
             })
             .disposed(by: disposeBag)
 

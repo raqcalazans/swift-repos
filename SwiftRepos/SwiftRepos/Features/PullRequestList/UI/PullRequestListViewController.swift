@@ -2,7 +2,13 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-final class PullRequestListViewController: BaseViewController<PullRequestListViewModel> {
+typealias PullRequestListStore = Store<
+    PullRequestListState,
+    PullRequestListAction,
+    (apiService: APIServiceProtocol, repository: Repository)
+>
+
+final class PullRequestListViewController: BaseViewController<PullRequestListStore> {
 
     // MARK: - UI Components
     
@@ -11,7 +17,7 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 120
+        tableView.estimatedRowHeight = Layout.PullRequestCell.estimatedRowHeight
         tableView.register(PullRequestCell.self, forCellReuseIdentifier: PullRequestCell.reuseID)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
@@ -35,7 +41,7 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
     private let emptyStateLabel: UILabel = {
         let label = UILabel()
         label.text = "Nenhum Pull Request encontrado para este repositório."
-        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.font = Typography.body
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -45,15 +51,24 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
     
     private lazy var statsLabel: UILabel = {
         let label = UILabel()
-        label.frame = CGRect(x: Spacing.medium, y: 0, width: view.frame.width - (Spacing.medium * 2), height: 44)
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .secondaryLabel
+        label.frame = CGRect(
+            x: Spacing.medium,
+            y: 0, width: view.frame.width - (Spacing.medium * 2),
+            height: Layout.standardViewHeight
+        )
+        label.font = Typography.subheadline
         label.textAlignment = .center
+        label.textColor = .secondaryLabel
         return label
     }()
     
     private lazy var headerView: UIView = {
-        let view = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 44))
+        let view = UIView(frame: CGRect(
+            x: 0,
+            y: 0,
+            width: self.view.frame.width,
+            height: Layout.standardViewHeight
+        ))
         view.addSubview(statsLabel)
         return view
     }()
@@ -62,10 +77,10 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        viewModel.intent.accept(.viewDidAppear)
+        viewModel.action.accept(.viewDidAppear)
     }
 
-    // MARK: - Override Methods
+    // MARK: - Overridden Methods
     
     override func setupView() {
         super.setupView()
@@ -78,7 +93,7 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
     override func bindViewModel() {
         super.bindViewModel()
         
-        // MARK: - Outputs (ViewModel -> View)
+        // MARK: - Outputs (Store -> View)
         
         viewModel.state
             .map { "\($0.repositoryName ?? "") PRs" }
@@ -92,8 +107,10 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
         
         viewModel.state
             .map { $0.pullRequests }
-            .drive(tableView.rx.items(cellIdentifier: PullRequestCell.reuseID, cellType: PullRequestCell.self)) { (row, pullRequest, cell) in
-                cell.configure(with: pullRequest)
+            .drive(tableView.rx.items(
+                cellIdentifier: PullRequestCell.reuseID,
+                cellType: PullRequestCell.self)) { (row, pullRequest, cell) in
+                    cell.configure(with: pullRequest)
             }
             .disposed(by: disposeBag)
         
@@ -114,16 +131,21 @@ final class PullRequestListViewController: BaseViewController<PullRequestListVie
         
         viewModel.state
             .map { state in
-                return !(state.hasFetchedOnce && !state.isLoading && state.error == nil && state.pullRequests.isEmpty)
+                return !(
+                    state.hasFetchedOnce &&
+                    !state.isLoading &&
+                    state.error == nil &&
+                    state.pullRequests.isEmpty
+                )
             }
             .drive(emptyStateLabel.rx.isHidden)
             .disposed(by: disposeBag)
         
-        // MARK: - Inputs (View -> ViewModel)
+        // MARK: - Inputs (View -> Store)
         
         tableView.rx.modelSelected(PullRequest.self)
             .map { .pullRequestSelected($0) }
-            .bind(to: viewModel.intent)
+            .bind(to: viewModel.action)
             .disposed(by: disposeBag)
         
         tableView.rx.itemSelected

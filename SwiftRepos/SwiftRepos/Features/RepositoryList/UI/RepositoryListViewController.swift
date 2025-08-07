@@ -2,7 +2,13 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-final class RepositoryListViewController: BaseViewController<RepositoryListViewModel> {
+typealias RepositoryListStore = Store<
+    RepositoryListState,
+    RepositoryListAction,
+    APIServiceProtocol
+>
+
+final class RepositoryListViewController: BaseViewController<RepositoryListStore> {
 
     // MARK: - UI Components
     
@@ -11,7 +17,7 @@ final class RepositoryListViewController: BaseViewController<RepositoryListViewM
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 160
+        tableView.estimatedRowHeight = Layout.RepositoryCell.estimatedRowHeight
         tableView.register(RepositoryCell.self, forCellReuseIdentifier: RepositoryCell.reuseID)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
@@ -33,7 +39,12 @@ final class RepositoryListViewController: BaseViewController<RepositoryListViewM
     }()
 
     private let footerView: UIView = {
-        let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 44))
+        let view = UIView(frame: CGRect(
+            x: 0,
+            y: 0,
+            width: UIScreen.main.bounds.width,
+            height: Layout.standardViewHeight
+        ))
         let indicator = UIActivityIndicatorView(style: .medium)
         indicator.center = view.center
         indicator.startAnimating()
@@ -45,7 +56,7 @@ final class RepositoryListViewController: BaseViewController<RepositoryListViewM
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        viewModel.intent.accept(.viewDidAppear)
+        viewModel.action.accept(.viewDidAppear)
     }
 
     // MARK: - Overridden Methods
@@ -61,13 +72,15 @@ final class RepositoryListViewController: BaseViewController<RepositoryListViewM
     override func bindViewModel() {
         super.bindViewModel()
         
-        // MARK: - Outputs (ViewModel -> View)
+        // MARK: - Outputs (Store -> View)
         
         viewModel.state
             .map { $0.repositories }
             .skip(1)
-            .drive(tableView.rx.items(cellIdentifier: RepositoryCell.reuseID, cellType: RepositoryCell.self)) { (row, repository, cell) in
-                cell.configure(with: repository)
+            .drive(tableView.rx.items(
+                cellIdentifier: RepositoryCell.reuseID,
+                cellType: RepositoryCell.self)) { (row, repository, cell) in
+                    cell.configure(with: repository)
             }
             .disposed(by: disposeBag)
             
@@ -98,11 +111,11 @@ final class RepositoryListViewController: BaseViewController<RepositoryListViewM
             .drive(errorLabel.rx.text)
             .disposed(by: disposeBag)
 
-        // MARK: - Inputs (View -> ViewModel)
+        // MARK: - Inputs (View -> Store)
         
         tableView.rx.modelSelected(Repository.self)
             .map { .repositorySelected($0) }
-            .bind(to: viewModel.intent)
+            .bind(to: viewModel.action)
             .disposed(by: disposeBag)
         
         tableView.rx.itemSelected
@@ -112,7 +125,10 @@ final class RepositoryListViewController: BaseViewController<RepositoryListViewM
             .disposed(by: disposeBag)
 
         tableView.rx.contentOffset
-            .throttle(.milliseconds(500), scheduler: MainScheduler.instance)
+            .throttle(
+                .milliseconds(AppConfiguration.Pagination.scrollThrottleInterval),
+                scheduler: MainScheduler.instance
+            )
             .map { [weak self] offset -> Bool in
                 guard let self = self else { return false }
                 
@@ -122,14 +138,14 @@ final class RepositoryListViewController: BaseViewController<RepositoryListViewM
                 guard contentHeight > visibleHeight else { return false }
                 
                 let y = offset.y + visibleHeight
-                let threshold = contentHeight - 200
+                let threshold = contentHeight - AppConfiguration.Pagination.threshold
                 
                 return y >= threshold
             }
             .distinctUntilChanged()
             .filter { $0 }
             .map { _ in .reachedEndOfList }
-            .bind(to: viewModel.intent)
+            .bind(to: viewModel.action)
             .disposed(by: disposeBag)
     }
     
